@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -235,7 +236,7 @@ func gitSyncCmd(cfg *config, sc *syncCookie) (*gitapi.Cmd, error) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0, 2048))
-	tmpl := template.Must(template.New("remoteGitCmd").Parse(remoteGitCmd))
+	tmpl := template.Must(template.New("remoteGitCmd").Parse(fmt.Sprintf(remoteGitCmd, getLocalBranch()))
 	tmpl.Option("missingkey=error")
 	if err := tmpl.Execute(buf, cmdFmt); err != nil {
 		return nil, err
@@ -298,8 +299,17 @@ func getChangesViaStatus(workdir string, sc *syncCookie) (changedFiles []string,
 	return changedFiles, nil
 }
 
+func getLocalBranch() (string) {
+	branch, exist := os.LookupEnv("GIT_SYNC_BRANCH")
+	if !exist {
+		branch = "master"
+	}
+	return branch
+}
+
 func remoteGitFetchCmd(cfg *config, workdir string) (*gitapi.Cmd, error) {
-	shCmd := "flock --nonblock {{.RemoteDir}}/.git/FETCH_HEAD {{.GitRemotePath}} -C {{.RemoteDir}} fetch -q origin master < /dev/null > /dev/null 2>&1 &"
+
+	shCmd := fmt.Sprintf("flock --nonblock {{.RemoteDir}}/.git/FETCH_HEAD {{.GitRemotePath}} -C {{.RemoteDir}} fetch -q origin %s < /dev/null > /dev/null 2>&1 &", getLocalBranch())
 	tmpl := template.Must(template.New("remoteGitFetchCmd").Parse(shCmd)).Option("missingkey=error")
 	shCmdFmt := struct {
 		RemoteDir     string
@@ -574,7 +584,7 @@ fi
 
 if [[ $head_hash != {{.CommitHash}} ]]; then
   if ! {{.GitRemotePath}} -C {{.RemoteDir}} cat-file -e {{.CommitHash}}; then
-    {{.GitRemotePath}} -C {{.RemoteDir}} fetch -q origin master || exit 1
+    {{.GitRemotePath}} -C {{.RemoteDir}} fetch -q origin %s || exit 1
     # If the hash still does not exist, we try to error out with a nice error message
     if ! {{.GitRemotePath}} -C {{.RemoteDir}} cat-file -e {{.CommitHash}}; then
       echo "ERROR: {{.CommitHash}} does not exist on {{.RemoteDir}}. Did you link your local repo to the correct remote repo?" >&2
