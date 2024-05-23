@@ -236,7 +236,7 @@ func gitSyncCmd(cfg *config, sc *syncCookie) (*gitapi.Cmd, error) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0, 2048))
-	tmpl := template.Must(template.New("remoteGitCmd").Parse(fmt.Sprintf(remoteGitCmd, getLocalBranch()))
+	tmpl := template.Must(template.New("remoteGitCmd").Parse(fmt.Sprintf(remoteGitCmd, getLocalBranch())))
 	tmpl.Option("missingkey=error")
 	if err := tmpl.Execute(buf, cmdFmt); err != nil {
 		return nil, err
@@ -299,7 +299,7 @@ func getChangesViaStatus(workdir string, sc *syncCookie) (changedFiles []string,
 	return changedFiles, nil
 }
 
-func getLocalBranch() (string) {
+func getLocalBranch() string {
 	branch, exist := os.LookupEnv("GIT_SYNC_BRANCH")
 	if !exist {
 		branch = "master"

@@ -11,7 +11,7 @@ var (
 )
 
 func RegisterFlags(fs *flag.FlagSet) {
-	fs.BoolVar(&verbose, "v", false, "Enable more console output")
+	fs.BoolVar(&verbose, "v", false, "Enable more console output zvory changes")
 	fs.BoolVar(&quiet, "q", false, "Enable less console output")
 }
 
