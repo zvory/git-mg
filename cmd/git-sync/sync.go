@@ -302,7 +302,7 @@ func getChangesViaStatus(workdir string, sc *syncCookie) (changedFiles []string,
 func getLocalBranch() string {
 	branch, exist := os.LookupEnv("GIT_SYNC_BRANCH")
 	if !exist {
-		branch = "master"
+		branch = "prod"
 	}
 	return branch
 }
